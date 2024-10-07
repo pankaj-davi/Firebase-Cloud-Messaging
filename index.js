@@ -21,12 +21,14 @@ const message = {
   notification: {
     title: title,
     body: body,
-    image: imageUrl,  // Image is fine in the notification
+    imageUrl: imageUrl,  // Image is fine in the notification
   },
   android: {
     notification: {
       sound: 'gooutsound',  // Android-specific sound setting
       channel_id: 'your-channel-id-01', // Must match the channel ID defined in MainActivity
+      imageUrl: imageUrl,
+      icon: 'ic_launcher_round',
     },
   },
   apns: {
