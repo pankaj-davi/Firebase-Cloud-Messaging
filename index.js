@@ -1,54 +1,58 @@
 const express = require('express');
 const admin = require('firebase-admin');
-const bodyParser = require('body-parser');
+const serverless = require('serverless-http'); // Assuming you're using serverless-http
 
-// Initialize the Firebase Admin SDK
 const serviceAccount = require('./serviceAccountKey.json');
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
 const app = express();
-app.use(bodyParser.json()); // Middleware to parse JSON
+
+// Middleware to parse JSON body
+app.use(express.json());
+
+// Health check endpoint
+app.get('/health-check', (req, res) => {
+  res.status(200).json({ success: true, message: 'Service is up and running' });
+});
 
 // Endpoint to send a push notification
 app.post('/send-notification', async (req, res) => {
   const { deviceToken, title, body, imageUrl } = req.body;
-  console.log(req.body, "req.body"); // Log the incoming payload
+  console.log(req.body, "req.body");
 
-const message = {
-  notification: {
-    title: title,
-    body: body,
-    imageUrl: imageUrl,  // Image is fine in the notification
-  },
-  android: {
+  const message = {
     notification: {
-      sound: 'gooutsound',  // Android-specific sound setting
-      channel_id: 'your-channel-id-01', // Must match the channel ID defined in MainActivity
+      title: title,
+      body: body,
       imageUrl: imageUrl,
-      icon: 'ic_launcher_round',
     },
-  },
-  apns: {
-    payload: {
-      aps: {
-        sound: 'gooutsound.mp3',  // iOS-specific sound setting
+    android: {
+      notification: {
+        sound: 'default',
+        channel_id: 'your-channel-id-01',
+        imageUrl: imageUrl,
+        icon: 'ic_launcher_round',
       },
     },
-  },
-  data: {
-    imageUrl: imageUrl,  // Custom data
-    title: title,
-    body: body,
-  },
-  token: deviceToken,  // The token of the recipient device
-};
-
+    apns: {
+      payload: {
+        aps: {
+          sound: 'default',
+        },
+      },
+    },
+    data: {
+      imageUrl: imageUrl,
+      title: title,
+      body: body,
+    },
+    token: deviceToken,
+  };
 
   try {
-    const response = await admin.messaging().send(message);
+    const response = await admin.messaging().send(message); // Firebase messaging
     console.log('Successfully sent message:', response);
     res.status(200).send({ success: true, response });
   } catch (error) {
@@ -57,10 +61,6 @@ const message = {
   }
 });
 
-
-
-// Start the server on port 3000
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Export the handler for each function
+module.exports.sendNotification = serverless(app); // Export the sendNotification function
+module.exports.healthCheck = serverless(app); // Export the healthCheck function

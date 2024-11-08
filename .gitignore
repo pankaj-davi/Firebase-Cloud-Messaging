@@ -88,3 +88,10 @@ package-lock.json.*
 package-lock.json
 
 serviceAccountKey.json
+serverless.yaml
+.yaml*
+*./../.yaml*
+*./../serverless.yaml
+*./../serverless.yaml
+*/google-services.json
+*./../serverless.yaml
